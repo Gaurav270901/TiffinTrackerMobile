@@ -1,0 +1,87 @@
+Build a mobile app called **TiffinTracker (Mobile)** — a single-user, offline-first app to track daily tiffin for **both lunch and dinner**. Deliver a runnable Git repo with full source, README, and demo data.
+
+Tech stack (must use)
+- Expo (React Native) + TypeScript
+- Local DB: SQLite via `expo-sqlite` (or a small wrapper like `expo-sqlite-orm`)
+- State: React Context or Zustand
+- UI: React Native components (mobile-first), minimal dependencies (no heavy UI libs unless necessary)
+- Tests: unit tests for utilities (Jest) — optional but preferred
+- Optional: build scripts / instructions to produce an APK (Expo EAS or classic build instructions)
+
+Data model
+- DayEntry (per calendar date)
+  - id: string (GUID)
+  - date: 'YYYY-MM-DD' (date-only)
+  - lunchType: "None" | "Half" | "Full"
+  - dinnerType: "None" | "Half" | "Full"
+  - lunchPrice: number (optional) — if null, resolve using settings
+  - dinnerPrice: number (optional)
+  - notes: string (optional) — general note for the day
+  - createdAt, updatedAt timestamps
+- Settings (single record)
+  - halfPrice: number (default 50)
+  - fullPrice: number (default 60)
+  - currency: string (default "INR")
+
+Business rules
+- Each date has one DayEntry (store None entries explicitly).
+- For reports, price resolution: if lunchPrice/dinnerPrice is present use it; otherwise use settings (halfPrice/fullPrice) according to type.
+- None entries contribute zero to totals.
+- Date stored date-only to avoid timezone issues.
+
+UI / Features
+1. Onboarding / Demo data
+   - On first run seed demo month (e.g., current month) so calendar shows sample entries. Allow user to clear demo data.
+2. Home / Quick Entry
+   - Shows today's date.
+   - Two rows: Lunch and Dinner. Each row has three large segmented buttons: None, Half (₹50), Full (₹60) and an optional "notes" icon.
+   - Save button (or auto-save on selection).
+3. Calendar view (monthly)
+   - Grid calendar with small indicators per day:
+     - Show two small dots or stacked indicators: one for lunch (color per type) and one for dinner (color per type).
+     - Colors: Grey=None, Yellow=Half, Green=Full.
+   - Tap a date to open Day Detail (edit/delete).
+4. Day Detail / Edit
+   - Show date, current lunch/dinner selection, editable notes, manual price overrides for lunch/dinner.
+   - Save / Delete buttons.
+5. Reports
+   - Date range picker (preset: this month, last month).
+   - Show counts: halfLunchCount, fullLunchCount, noneLunchCount; halfDinnerCount, fullDinnerCount, noneDinnerCount.
+   - Combine totals: totalLunchAmount, totalDinnerAmount, grandTotal.
+   - CSV export (client-side) to share via OS share dialog or export to file.
+6. Settings
+   - Edit Half price and Full price (these affect calculation when entry prices are missing).
+   - Toggle demo data on/off, clear all data.
+7. Sync / Backup (optional)
+   - Optional export/import JSON backup to copy between devices manually (no cloud).
+8. Offline-first
+   - Entire app works offline. All writes go to local SQLite DB.
+9. Date handling
+   - Store and display dates in local device date (YYYY-MM-DD). Avoid timezone issues by using date-only strings.
+
+UX / Accessibility
+- Mobile-first: large tappable controls.
+- Use icons where helpful; keep UI minimal and fast.
+- Support landscape/portrait.
+
+Code & architecture
+- Simple MVVM-ish or clean separation:
+  - Screens -> hooks/services -> db layer -> models
+- DB layer: a small wrapper to run SQL queries and map to models.
+- Use TypeScript types everywhere.
+- Provide sample unit tests for report calculation utilities (counts and totals).
+- Include an example `seedDemoData()` to populate current month.
+
+Deliverables & README
+- Full Expo project that runs with `npm install` and `expo start`.
+- Instructions to run in Expo Go and how to build APK optionally.
+- README with run steps, seed/demo info, and sample usage.
+- Provide screenshots or GIF (optional).
+
+Acceptance criteria
+- I can run `npm install` and `expo start`, open the app in Expo Go, and:
+  - mark lunch and dinner for today as None/Half/Full,
+  - view history in calendar with separate indicators for lunch and dinner,
+  - edit past days and set price overrides,
+  - generate a report for a month that correctly calculates per-meal counts and totals (example: if in demo month lunchHalf=12, lunchFull=14 then lunch total = 12*50 + 14*60),
+  - export report as CSV to device.
